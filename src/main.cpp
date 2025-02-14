@@ -54,7 +54,7 @@ string get_size(fs::directory_entry entry)
         }
         else if (entry.is_directory())
         {
-            size = "<DIR>";
+            size = "(DIR)";
         }
 
         // Make sure the output is 10 characters long
@@ -81,7 +81,7 @@ void print_file_info(fs::directory_entry entry, int depth, bool is_last, const v
     cout << output << endl;
 }
 
-int get_files(string path, int depth = 0, vector<bool> is_last_at_depth = vector<bool>())
+int get_files(string path, int maxdepth, int depth = 0, vector<bool> is_last_at_depth = vector<bool>())
 {
     // Store all the entries in the directory
     vector<fs::directory_entry> entries;
@@ -116,20 +116,48 @@ int get_files(string path, int depth = 0, vector<bool> is_last_at_depth = vector
         {
             print_file_info(entries[i], depth, is_last, is_last_at_depth);
 
-            get_files(entries[i].path().string(), depth + 1, is_last_at_depth);
+            if (maxdepth == -1 || depth < maxdepth)
+            {
+                get_files(entries[i].path().string(), maxdepth, depth + 1, is_last_at_depth);
+            }
         }
     }
     return 0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     // Get the current path from where the program is called
     string path = fs::current_path().string();
     cout << "Current path: " << path << endl;
 
+    int maxdepth = -1;
+
+    // Check for maxdepth argument
+    if (argc > 1)
+    {
+        for (int i = 0; i < argc; i++)
+        {
+            if (string(argv[i]) == "--maxdepth")
+            {
+                maxdepth = stoi(argv[i + 1]);
+            }
+            else if (string(argv[i]) == "--path")
+            {
+                path = argv[i + 1];
+            }
+            else if (string(argv[i]) == "--help")
+            {
+                cout << "Usage: list-tree [--maxdepth <depth>] [--path <path>]" << endl;
+                return 0;
+            }
+        }
+    }
+
+    printf("Maxdepth: %d\n", maxdepth);
+
     // Get the files in the current path
-    get_files(path);
+    get_files(path, maxdepth);
 
     return 0;
 }
